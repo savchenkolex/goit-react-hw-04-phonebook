@@ -1,19 +1,16 @@
-import React, { Component } from 'react';
-import { nanoid } from 'nanoid';
-import BaseForm from './components/BaseForm/BaseForm';
-import Section from './utils/Section/Section';
-import HeaderSection from './components/HeaderSection/HeaderSection';
-import ListContacts from './components/ListContacts/ListContacts';
-import QuickSearch from './components/QuickSearch/QuickSearch';
+import React, { useEffect, useState } from "react";
+import { nanoid } from "nanoid";
+import BaseForm from "./components/BaseForm/BaseForm";
+import Section from "./utils/Section/Section";
+import HeaderSection from "./components/HeaderSection/HeaderSection";
+import ListContacts from "./components/ListContacts/ListContacts";
+import QuickSearch from "./components/QuickSearch/QuickSearch";
 
-class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+function App() {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState("");
 
-  addContact = data => {
-    const { contacts } = this.state;
+  const addContact = (data) => {
     const isExists = contacts.some(({ name }) => {
       return name === data.name;
     });
@@ -22,71 +19,56 @@ class App extends Component {
 
       return;
     }
-
-    this.setState(pervState => {
-      return {
-        contacts: [
-          ...pervState.contacts,
-          { id: nanoid(), ...data },
-        ],
-      };
+    setContacts((pervContacts) => {
+      return [...pervContacts, { id: nanoid(), ...data }];
     });
   };
 
-  inputHandler = event => {
-    const { name, value } = event.target;
-
-    this.setState({ [name]: value });
+  const inputHandler = (event) => {
+    const { value } = event.target;
+    setFilter(value);
   };
 
-  filterFn = () => {
-    const contacts = this.state.contacts;
+  const filterFn = () => {
     return contacts.filter(({ name }) => {
-      return name.toLowerCase().includes(this.state.filter.toLowerCase());
+      return name.toLowerCase().includes(filter.toLowerCase());
     });
   };
 
-  deleteContact = id => {
-    this.setState(pervState => {
-      return {
-        contacts: pervState.contacts.filter(item => {
-          return item.id !== id;
-        }),
-      };
+  const deleteContact = (id) => {
+    setContacts((pervContacts) => {
+      return pervContacts.filter((item) => {
+        return item.id !== id;
+      });
     });
   };
 
-  componentDidMount() {
-    const isContactsInLS = localStorage.getItem('contacts');
+  useEffect(() => {
+    const isContactsInLS = JSON.parse(localStorage.getItem("contacts"));
 
-    if (isContactsInLS) {
-      this.setState({ contacts: JSON.parse(localStorage.getItem('contacts')) });
+    if (isContactsInLS.length) {
+      setContacts(() => {
+        return [...isContactsInLS];
+      });
     }
-  }
+  }, []);
 
-  componentDidUpdate(_, pervState) {
-    if (this.state.contacts !== pervState.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
+  useEffect(() => {
+    localStorage.setItem("contacts", JSON.stringify(contacts));
+  }, [contacts]);
 
-  render() {
-    return (
-      <>
-        <HeaderSection />
-        <Section title="Add New Contact">
-          <BaseForm addContact={this.addContact} />
-        </Section>
-        <Section title="Contacts">
-          <QuickSearch fnInput={this.inputHandler} />
-          <ListContacts
-            contacts={this.filterFn()}
-            deleteContact={this.deleteContact}
-          />
-        </Section>
-      </>
-    );
-  }
+  return (
+    <>
+      <HeaderSection />
+      <Section title="Add New Contact">
+        <BaseForm addContact={addContact} />
+      </Section>
+      <Section title="Contacts">
+        <QuickSearch fnInput={inputHandler} />
+        <ListContacts contacts={filterFn()} deleteContact={deleteContact} />
+      </Section>
+    </>
+  );
 }
 
 export default App;
