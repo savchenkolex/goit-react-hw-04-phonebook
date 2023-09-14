@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import css from "./HeaderSection.module.css";
 
 function HeaderSection () {
