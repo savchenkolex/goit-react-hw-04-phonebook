@@ -7,12 +7,21 @@ import ListContacts from "./components/ListContacts/ListContacts";
 import QuickSearch from "./components/QuickSearch/QuickSearch";
 
 function App() {
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState(() => {
+    if (localStorage.getItem("contacts")) {
+      return JSON.parse(localStorage.getItem("contacts"));
+    }
+    return [];
+  });
   const [filter, setFilter] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem("contacts", JSON.stringify(contacts));
+  }, [contacts]);
 
   const addContact = (data) => {
     const isExists = contacts.some(({ name }) => {
-      return name === data.name;
+      return name.toLowerCase() === data.name.toLowerCase();
     });
     if (isExists) {
       alert(`Looks like ${data.name} is already in contacts.`);
@@ -43,20 +52,6 @@ function App() {
     });
   };
 
-  useEffect(() => {
-    const isContactsInLS = JSON.parse(localStorage.getItem("contacts"));
-
-    if (isContactsInLS.length) {
-      setContacts(() => {
-        return [...isContactsInLS];
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("contacts", JSON.stringify(contacts));
-  }, [contacts]);
-
   return (
     <>
       <HeaderSection />
@@ -64,7 +59,7 @@ function App() {
         <BaseForm addContact={addContact} />
       </Section>
       <Section title="Contacts">
-        <QuickSearch fnInput={inputHandler} />
+        <QuickSearch inputHandler={inputHandler} />
         <ListContacts contacts={filterFn()} deleteContact={deleteContact} />
       </Section>
     </>
